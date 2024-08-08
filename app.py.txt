@@ -1,0 +1,51 @@
+from flask import Flask, render_template
+import pandas as pd
+from statsmodels.tsa.arima.model import ARIMA
+
+app = Flask(__name__)
+
+# Read the CSV file and load the data
+data = pd.read_csv("/content/drive/MyDrive/Vehicle_counting/data1.csv")
+
+# Preprocess the data
+data['Timestamp'] = pd.to_datetime(data['Timestamp'])
+data['Day'] = data['Timestamp'].dt.day_name()
+data['Time'] = data['Timestamp'].dt.hour
+data['Total_Vehicles'] = data['Total_Vehicles']
+
+# Aggregate total vehicles by day and hour
+traffic_data = data.groupby(['Day', 'Time'])['Total_Vehicles'].max().reset_index()
+
+# Create a pivot table to make time series data
+traffic_pivot = traffic_data.pivot(index='Time', columns='Day', values='Total_Vehicles').fillna(0)
+
+@app.route('/')
+def index():
+    # Choose a specific day and time to forecast (e.g., Monday at 7 AM)
+    forecast_day = 'Monday'
+    forecast_time = 7
+    
+    # Extract the historical data for the chosen day and time
+    historical_data = traffic_pivot.loc[forecast_time].values
+    
+    # Train an ARIMA model
+    model = ARIMA(historical_data, order=(1,1,1))  # Example order, you may need to tune this
+    model_fit = model.fit()
+
+    # Predict the traffic for the next time slot (e.g., Monday at 8 AM)
+    forecast_value = model_fit.forecast(steps=1)[0]
+    
+    # Determine if the traffic is high or not based on the threshold
+    threshold = 5
+    predicted_traffic = 'High' if forecast_value >= threshold else 'Smooth'
+    
+    # Render the HTML template with the vehicle count and prediction
+    return render_template('index.html', 
+                           car_count=up_list[0] + down_list[0], 
+                           motorbike_count=up_list[1] + down_list[1], 
+                           bus_count=up_list[2] + down_list[2], 
+                           truck_count=up_list[3] + down_list[3],
+                           predicted_traffic=predicted_traffic)
+
+if __name__ == '__main__':
+    app.run(debug=True)

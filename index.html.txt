@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vehicle Counting and Prediction</title>
+</head>
+<body>
+    <h1>Vehicle Count</h1>
+    <ul>
+        <li>Car Count: {{ car_count }}</li>
+        <li>Motorbike Count: {{ motorbike_count }}</li>
+        <li>Bus Count: {{ bus_count }}</li>
+        <li>Truck Count: {{ truck_count }}</li>
+    </ul>
+    <h1>Predicted Traffic</h1>
+    <p>{{ predicted_traffic }}</p>
+</body>
+</html>
